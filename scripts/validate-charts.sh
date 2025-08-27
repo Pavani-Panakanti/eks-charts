@@ -15,6 +15,17 @@ for d in */; do
     if [ -f ${STABLE}/${d}/ci/extra_args ]; then
         EXTRA_ARGS=$(cat ${STABLE}/${d}/ci/extra_args)
     fi
+    
+    # Efa device plugin specific validation: check for duplicate instances in both lists
+    if [ "${d}" = "aws-efa-k8s-device-plugin/" ]; then
+        echo "Running aws-efa-k8s-device-plugin validation for ${d}"
+        if [ -f ${STABLE}/${d}/scripts/validate-instance-lists.sh ]; then
+            cd ${STABLE}/${d}
+            bash scripts/validate-instance-lists.sh || FAILED+=("${d} (instance-lists)")
+            cd ${STABLE}
+        fi
+    fi
+    
     echo "Validating chart ${d} w/ helm"
     helm template ${STABLE}/${d} ${EXTRA_ARGS}| kubeval --strict --ignore-missing-schemas || FAILED+=("${d}")
 done

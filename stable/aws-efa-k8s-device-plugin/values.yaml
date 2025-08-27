@@ -1,12 +1,29 @@
 image:
   repository: 602401143452.dkr.ecr.us-west-2.amazonaws.com/eks/aws-efa-k8s-device-plugin
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "v0.5.8"
+  tag: "v0.5.9-rc1"
+# Security context for standard EFA instances
 securityContext:
   allowPrivilegeEscalation: false
   capabilities:
     drop: ["ALL"]
   runAsNonRoot: false
+# Security context for privileged instances (inf/trn)
+privilegedSecurityContext:
+  allowPrivilegeEscalation: true
+  privileged: true
+  runAsNonRoot: false
+  runAsUser: 0
+# EFA supported instances that require privileged security context. Tjis list should only include neuron instances(inf/trn)
+privilegedSupportedInstanceLabels:
+  keys:
+    - "node.kubernetes.io/instance-type"
+  values:
+    - inf1.24xlarge
+    - trn1.32xlarge
+    - trn1n.32xlarge
+    - trn2.48xlarge
+    - trn2u.48xlarge
 supportedInstanceLabels: # EFA supported instances: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html#efa-instance-types
   keys:
     - "node.kubernetes.io/instance-type"
@@ -144,7 +161,6 @@ supportedInstanceLabels: # EFA supported instances: https://docs.aws.amazon.com/
     - g6e.24xlarge
     - g6e.48xlarge
     - gr6.8xlarge
-    - inf1.24xlarge
     - p3dn.24xlarge
     - p4d.24xlarge
     - p4de.24xlarge
@@ -153,10 +169,6 @@ supportedInstanceLabels: # EFA supported instances: https://docs.aws.amazon.com/
     - p5en.48xlarge
     - p6-b200.48xlarge
     - p6e-gb200.36xlarge
-    - trn1.32xlarge
-    - trn1n.32xlarge
-    - trn2.48xlarge
-    - trn2u.48xlarge
     - vt1.24xlarge
     - hpc6a.48xlarge
     - hpc6id.32xlarge

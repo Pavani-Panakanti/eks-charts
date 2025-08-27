@@ -1,13 +1,14 @@
+{{- if .Values.privilegedSupportedInstanceLabels.values }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{ include "aws-efa-k8s-device-plugin.fullname" . }}
+  name: {{ include "aws-efa-k8s-device-plugin.fullname" . }}-privileged
   labels:
     {{- include "aws-efa-k8s-device-plugin.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      name:  {{ include "aws-efa-k8s-device-plugin.fullname" . }}
+      name: {{ include "aws-efa-k8s-device-plugin.fullname" . }}
   updateStrategy:
     type: RollingUpdate
   template:
@@ -48,12 +49,12 @@ spec:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-              {{- range .Values.supportedInstanceLabels.keys }}
+              {{- range .Values.privilegedSupportedInstanceLabels.keys }}
               - matchExpressions:
                 - key: {{ . }}
                   operator: In
                   values:
-                    {{- toYaml $.Values.supportedInstanceLabels.values | nindent 20 }}
+                    {{- toYaml $.Values.privilegedSupportedInstanceLabels.values | nindent 20 }}
               {{- end }}
                 - key: eks.amazonaws.com/compute-type
                   operator: NotIn
@@ -64,7 +65,7 @@ spec:
         - image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
           name: aws-efa-k8s-device-plugin
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            {{- toYaml .Values.privilegedSecurityContext | nindent 12 }}
           {{- with .Values.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -74,6 +75,8 @@ spec:
               name: device-plugin
             - mountPath: /dev/infiniband/
               name: infiniband-volume
+            - mountPath: /opt/aws/neuron/
+              name: neuron-tools
       volumes:
         - hostPath:
             path: /var/lib/kubelet/device-plugins
@@ -83,3 +86,8 @@ spec:
             path: /dev/infiniband/
             type: ""
           name: infiniband-volume
+        - hostPath:
+            path: /opt/aws/neuron
+            type: DirectoryOrCreate
+          name: neuron-tools
+{{- end }}
